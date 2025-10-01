@@ -1,10 +1,10 @@
 streamlit
-json
 re
-google
-genai
 types
 os
 bs4 
-BeautifulSoup
+
+google-genai
+beautifulsoup4
+
 
