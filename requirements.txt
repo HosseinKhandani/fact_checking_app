@@ -1,10 +1,6 @@
 streamlit
-re
-types
-os
-bs4 
-
 google-genai
 beautifulsoup4
+
 
 
