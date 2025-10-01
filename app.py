@@ -384,7 +384,7 @@ st.markdown(
         direction: rtl;
         text-align: right;
         display: flex;
-        justify-content: flex-start;
+        justify-content: flex-end;
         margin-top: 15px;
     }
     div.stButton > button {
@@ -398,6 +398,8 @@ st.markdown(
         padding: 14px 40px;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        margin-right: 0;
+        margin-left: auto;
     }
     div.stButton > button:hover {
         transform: translateY(-3px);
@@ -444,7 +446,9 @@ with st.container():
         key="model_choice"  # <- This saves selection automatically
     )
     
-    submit = st.button("✅ ارسال")
+    col1, col2, col3 = st.columns([6, 1, 1])
+    with col3:
+        submit = st.button("✅ ارسال")
 
 # ----------------- پردازش -----------------
 # --- Status placeholder ---
