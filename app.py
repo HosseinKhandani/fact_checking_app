@@ -381,7 +381,10 @@ st.markdown(
         background: #ffffff;
     }
     div.stButton {
-        text-align: right;  
+        direction: rtl;
+        text-align: right;
+        display: flex;
+        justify-content: flex-start;
         margin-top: 15px;
     }
     div.stButton > button {
