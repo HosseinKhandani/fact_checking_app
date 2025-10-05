@@ -3,13 +3,8 @@ import json
 import re
 from google import genai
 from google.genai import types
-#import os
+import time
 from bs4 import BeautifulSoup
-
-
-#proxy = "http://localhost:24765"
-#os.environ["HTTP_PROXY"] = proxy
-#os.environ["HTTPS_PROXY"] = proxy
 
 
 # --- Configuration ---
@@ -187,6 +182,7 @@ ________________________________________
 """
 apikey = "AIzaSyA0rz6G2sO3aqTiRpxt0VBcj5q6RHg3J3s"
 client = genai.Client(api_key=apikey)
+
 def callgemini(prompt):
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -196,7 +192,7 @@ def callgemini(prompt):
         "system_instruction": [types.Part.from_text(text=systeminstruction)],
         "temperature": 0.3,
         "thinking_config": types.ThinkingConfig(
-            thinking_budget=0  # Disables thinking. Set a value in milliseconds to enable.
+            thinking_budget=0
             )
     }
     )
@@ -213,9 +209,6 @@ def callgeminipro(prompt):
     }
     )
     return response
-
-
-
 
 # --- Utility Functions ---
 def is_primitive(val):
@@ -275,14 +268,14 @@ def make_table(headers, rows):
     if headers:
         table += "<thead><tr>"
         for h in headers:
-            table += f'<th style="border:1px solid #e0e0e0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight:bold; padding: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">{h}</th>'
+            table += f'<th style="border:1px solid #ddd; background: #667eea; color: white; font-weight:bold; padding: 12px;">{h}</th>'
         table += "</tr></thead>"
     table += "<tbody>"
     for i, row in enumerate(rows):
-        bg_color = "#fafafa" if i % 2 == 0 else "#ffffff"
-        table += f'<tr style="background-color: {bg_color}; transition: all 0.3s ease;">'
+        bg_color = "#f8f9fa" if i % 2 == 0 else "#ffffff"
+        table += f'<tr style="background-color: {bg_color};">'
         for cell in row:
-            table += f'<td style="border:1px solid #e0e0e0; padding: 10px;">{cell}</td>'
+            table += f'<td style="border:1px solid #ddd; padding: 10px;">{cell}</td>'
         table += "</tr>"
     table += "</tbody></table>"
     return table
@@ -295,11 +288,18 @@ if "status" not in st.session_state:
 if "response_obj" not in st.session_state:
     st.session_state.response_obj = None
 if "pending" not in st.session_state:
-    st.session_state.pending = False   # flag for rerun
+    st.session_state.pending = False
 if "input_text" not in st.session_state:
     st.session_state.input_text = ""
 if "model_choice" not in st.session_state:
     st.session_state.model_choice = "Gemini-2.5pro"
+# --- Statistics ---
+if "total_requests" not in st.session_state:
+    st.session_state.total_requests = 0
+if "successful_requests" not in st.session_state:
+    st.session_state.successful_requests = 0
+if "total_time" not in st.session_state:
+    st.session_state.total_time = 0
     
 # --- Streamlit UI ---
 st.markdown(
@@ -311,29 +311,66 @@ st.markdown(
         font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
     }
     
-    body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    }
-    
     h1, h2, h3, h4, h5, h6 {
         font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
     }
     </style>
     
     <h1 style='direction:rtl; text-align:right; 
-               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-               -webkit-background-clip: text;
-               -webkit-text-fill-color: transparent;
-               background-clip: text;
-               font-size: 52px;
+               color: #667eea;
+               font-size: 48px;
                font-weight: 700;
-               margin-bottom: 25px;
-               text-shadow: 2px 2px 4px rgba(0,0,0,0.1);'>
+               margin-bottom: 20px;'>
         🌐 دستیار راستی‌آزمایی 
     </h1>
     """,
     unsafe_allow_html=True
 )
+
+# --- Statistics Cards ---
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown(
+        f"""
+        <div style='background: #667eea; color: white;
+                    padding: 20px; border-radius: 12px; text-align: center;
+                    font-family: "B Homa", sans-serif;'>
+            <h3 style='margin: 0; font-size: 24px;'>کل درخواست‌ها</h3>
+            <p style='margin: 10px 0 0 0; font-size: 36px; font-weight: 700;'>{st.session_state.total_requests}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with col2:
+    st.markdown(
+        f"""
+        <div style='background: #27ae60; color: white;
+                    padding: 20px; border-radius: 12px; text-align: center;
+                    font-family: "B Homa", sans-serif;'>
+            <h3 style='margin: 0; font-size: 24px;'>اجرای موفق</h3>
+            <p style='margin: 10px 0 0 0; font-size: 36px; font-weight: 700;'>{st.session_state.successful_requests}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with col3:
+    avg_time = (st.session_state.total_time / st.session_state.successful_requests) if st.session_state.successful_requests > 0 else 0
+    st.markdown(
+        f"""
+        <div style='background: #3498db; color: white;
+                    padding: 20px; border-radius: 12px; text-align: center;
+                    font-family: "B Homa", sans-serif;'>
+            <h3 style='margin: 0; font-size: 24px;'>میانگین زمان</h3>
+            <p style='margin: 10px 0 0 0; font-size: 36px; font-weight: 700;'>{avg_time:.1f}s</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 #  CSS
 st.markdown(
@@ -342,11 +379,10 @@ st.markdown(
     div.stRadio {
         direction: rtl;
         text-align: right;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        padding: 18px;
-        border-radius: 15px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        background: #667eea;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 15px;
     }
     div.stRadio label {
         display: flex !important;
@@ -354,31 +390,27 @@ st.markdown(
         align-items: center;
         justify-content: flex-end;
         font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
-        font-size: 19px;
-        gap: 10px;
+        font-size: 18px;
+        gap: 8px;
         color: white;
         font-weight: 700;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
     div.stRadio input[type="radio"] {
         margin: 0 !important;
-        transform: scale(1.3);
+        transform: scale(1.2);
     }
     textarea {
         direction: rtl;
         text-align: right;
         font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
-        font-size: 17px;
-        border: 3px solid #667eea;
-        border-radius: 15px;
-        padding: 18px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        transition: all 0.3s ease;
+        font-size: 16px;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 15px;
     }
     textarea:focus {
         border-color: #764ba2;
-        box-shadow: 0 0 20px rgba(118, 75, 162, 0.4);
-        background: #ffffff;
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
     }
     div.stButton {
         direction: rtl;
@@ -388,38 +420,34 @@ st.markdown(
         margin-top: 15px;
     }
     div.stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #667eea;
         color: white;
         font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         border: none;
-        border-radius: 15px;
-        padding: 14px 40px;
+        border-radius: 12px;
+        padding: 12px 35px;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        margin-right: 0;
-        margin-left: auto;
     }
     div.stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        background: #764ba2;
+        transform: translateY(-2px);
     }
     table { 
         font-family: 'B Homa', Arial, sans-serif !important;
         font-size: 16px; 
         direction: rtl; 
         text-align: right;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     th, td {
-        border:1px solid #e0e0e0;
+        border:1px solid #ddd;
         padding: 12px;
     }
     th {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #667eea;
         color: white;
         font-weight: 700;
     }
@@ -435,7 +463,6 @@ with st.container():
         label_visibility="collapsed",  
         key="input_text",
         value=st.session_state.input_text
-
     )
     
     model_choice = st.radio(
@@ -443,14 +470,13 @@ with st.container():
         options=["Gemini-2.5pro", "Gemini-2.5flash"],
         index=0 if st.session_state.model_choice == "Gemini-2.5pro" else 1,
         horizontal=True,
-        key="model_choice"  # <- This saves selection automatically
+        key="model_choice"
     )
     
     col1, col2, col3 = st.columns([6, 1, 1])
     with col3:
         submit = st.button("✅ ارسال")
 
-# ----------------- پردازش -----------------
 # --- Status placeholder ---
 if "status_placeholder" not in st.session_state:
     st.session_state.status_placeholder = st.empty()
@@ -460,12 +486,10 @@ if submit:
     if not prompt.strip():
         st.session_state.status = """
         <div style='direction:rtl; text-align:right; 
-                    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-                    color:#c0392b; border:3px solid #e74c3c; 
-                    padding:18px; border-radius:15px; margin-top:15px;
+                    background: #e74c3c; color: white;
+                    padding:15px; border-radius:12px; margin-top:15px;
                     font-family: "B Homa", Tahoma, Arial, sans-serif;
-                    font-size: 19px; font-weight: 700;
-                    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);'>
+                    font-size: 18px; font-weight: 700;'>
             ⚠️ لطفاً یک متن معتبر وارد کنید.
         </div>
         """
@@ -473,36 +497,27 @@ if submit:
         st.session_state.response_obj = None
         st.session_state.pending = False
         st.session_state.status_placeholder.markdown(st.session_state.status, unsafe_allow_html=True)
-
     else:
-        # --- Step 1: show loading ---
         st.session_state.status = """
         <div style='direction:rtl; text-align:right; 
-                    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-                    color:#2980b9; border:3px solid #3498db; 
-                    padding:18px; border-radius:15px; margin-top:15px;
+                    background: #3498db; color: white;
+                    padding:15px; border-radius:12px; margin-top:15px;
                     font-family: "B Homa", Tahoma, Arial, sans-serif;
-                    font-size: 19px; font-weight: 700;
-                    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
-                    animation: pulse 2s infinite;'>
+                    font-size: 18px; font-weight: 700;'>
             ⏳ در حال تحلیل و راستی‌آزمایی...
         </div>
-        <style>
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        </style>
         """
         st.session_state.results = None
         st.session_state.response_obj = None
         st.session_state.pending = True
         st.session_state.status_placeholder.markdown(st.session_state.status, unsafe_allow_html=True)
 
-# --- Step 2: run API if pending ---
+# --- Run API if pending ---
 if st.session_state.get("pending", False):
-    import time
-    time.sleep(0.1)  # short pause to let Streamlit render ⏳
+    time.sleep(0.1)
+    
+    st.session_state.total_requests += 1
+    start_time = time.time()
 
     try:
         if model_choice == "Gemini-2.5flash":
@@ -510,29 +525,29 @@ if st.session_state.get("pending", False):
         else:
             response = callgeminipro(prompt)
 
+        elapsed_time = time.time() - start_time
+        st.session_state.total_time += elapsed_time
+        st.session_state.successful_requests += 1
+
         text = response.text
         st.session_state.results = text
         st.session_state.response_obj = response
-        st.session_state.status = """
+        st.session_state.status = f"""
         <div style='direction:rtl; text-align:right; 
-                    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
-                    color:#27ae60; border:3px solid #2ecc71; 
-                    padding:18px; border-radius:15px; margin-top:15px;
+                    background: #27ae60; color: white;
+                    padding:15px; border-radius:12px; margin-top:15px;
                     font-family: "B Homa", Tahoma, Arial, sans-serif;
-                    font-size: 19px; font-weight: 700;
-                    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);'>
-            ✅ تحلیل با موفقیت انجام شد!
+                    font-size: 18px; font-weight: 700;'>
+            ✅ تحلیل با موفقیت انجام شد! (زمان: {elapsed_time:.1f} ثانیه)
         </div>
         """
     except Exception as e:
         st.session_state.status = f"""
         <div style='direction:rtl; text-align:right; 
-                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-                    color:#c0392b; border:3px solid #e74c3c; 
-                    padding:18px; border-radius:15px; margin-top:15px;
+                    background: #e74c3c; color: white;
+                    padding:15px; border-radius:12px; margin-top:15px;
                     font-family: "B Homa", Tahoma, Arial, sans-serif;
-                    font-size: 19px; font-weight: 700;
-                    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);'>
+                    font-size: 18px; font-weight: 700;'>
             ❌ خطایی رخ داد: {e}
         </div>
         """
@@ -540,8 +555,8 @@ if st.session_state.get("pending", False):
         st.session_state.response_obj = None
 
     st.session_state.pending = False
-    # overwrite the status placeholder
     st.session_state.status_placeholder.markdown(st.session_state.status, unsafe_allow_html=True)
+    st.rerun()
 
 # --- Always show latest state ---
 if st.session_state.status:
@@ -566,11 +581,11 @@ if st.session_state.results:
                 text-align: right;
             }
             th, td {
-                border:1px solid #e0e0e0;
+                border:1px solid #ddd;
                 padding: 12px;
             }
             th {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: #667eea;
                 color: white;
                 font-weight: 700;
             }
@@ -592,15 +607,13 @@ if st.session_state.results:
                 if verdict:
                     st.markdown(
                         f"""
-                            <div style='background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
-                                        border:3px solid #fab1a0; 
-                                        padding:18px; border-radius:15px; margin-bottom:15px;
+                            <div style='background: #667eea; color: white;
+                                        padding:18px; border-radius:12px; margin-bottom:15px;
                                         margin-top:25px;
                                         direction:rtl; text-align:right; 
-                                        font-family: "B Homa", Tahoma, Arial, sans-serif;
-                                        box-shadow: 0 6px 20px rgba(250, 177, 160, 0.4);' >
-                                <b style="font-size:22px; color: #d63031;">🏷️ برچسب نهایی:</b><br>
-                                <span style="font-size:20px; font-weight: 700; color: #e17055;">{verdict}</span>
+                                        font-family: "B Homa", Tahoma, Arial, sans-serif;'>
+                                <b style="font-size:20px;">🏷️ برچسب نهایی:</b><br>
+                                <span style="font-size:22px; font-weight: 700;">{verdict}</span>
                             </div>
                         """,
                         unsafe_allow_html=True
@@ -609,14 +622,12 @@ if st.session_state.results:
                 if summary_of_findings:
                     st.markdown(
                         f"""
-                            <div style='background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); 
-                                        border:3px solid #74b9ff; 
-                                        padding:18px; border-radius:15px; margin-bottom:15px; 
+                            <div style='background: #3498db; color: white;
+                                        padding:18px; border-radius:12px; margin-bottom:15px; 
                                         direction:rtl; text-align:right; 
-                                        font-family: "B Homa", Tahoma, Arial, sans-serif;
-                                        box-shadow: 0 6px 20px rgba(116, 185, 255, 0.4);' >
-                                <b style="font-size:22px; color: #2980b9;">📊 نتیجه کلی راستی‌آزمایی:</b><br>
-                                <span style="font-size:19px; color: #0984e3; line-height: 1.8;">{summary_of_findings}</span>
+                                        font-family: "B Homa", Tahoma, Arial, sans-serif;'>
+                                <b style="font-size:20px;">📊 نتیجه کلی راستی‌آزمایی:</b><br>
+                                <span style="font-size:18px; line-height: 1.8;">{summary_of_findings}</span>
                             </div>
                         """,
                         unsafe_allow_html=True
@@ -625,14 +636,12 @@ if st.session_state.results:
                 if reasoning:
                     st.markdown(
                         f"""
-                            <div style='background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
-                                        border:3px solid #fdcb6e; 
-                                        padding:18px; border-radius:15px; margin-bottom:15px; 
+                            <div style='background: #764ba2; color: white;
+                                        padding:18px; border-radius:12px; margin-bottom:15px; 
                                         direction:rtl; text-align:right; 
-                                        font-family: "B Homa", Tahoma, Arial, sans-serif;
-                                        box-shadow: 0 6px 20px rgba(253, 203, 110, 0.4);' >
-                                <b style="font-size:22px; color: #c0392b;">📚 استدلال:</b><br>
-                                <span style="font-size:19px; color: #d63031; line-height: 1.8;">{reasoning}</span>
+                                        font-family: "B Homa", Tahoma, Arial, sans-serif;'>
+                                <b style="font-size:20px;">📚 استدلال:</b><br>
+                                <span style="font-size:18px; line-height: 1.8;">{reasoning}</span>
                             </div>
                         """,
                         unsafe_allow_html=True
@@ -645,17 +654,15 @@ if st.session_state.results:
                         soup = BeautifulSoup(extract_ref, "html.parser")
                         chips = soup.select("div.carousel a.chip")
                         if chips:
-                            chips_html = "<br>".join([f'• <a href="{chip.get("href")}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600; transition: all 0.3s;">{chip.get_text(strip=True)}</a>' for chip in chips])
+                            chips_html = "<br>".join([f'• <a href="{chip.get("href")}" target="_blank" style="color: white; text-decoration: underline;">{chip.get_text(strip=True)}</a>' for chip in chips])
                             st.markdown(
                                 f"""
-                                <div style='background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); 
-                                            border:3px solid #a29bfe; 
-                                            padding:18px; border-radius:15px; margin-bottom:20px; 
+                                <div style='background: #27ae60; color: white;
+                                            padding:18px; border-radius:12px; margin-bottom:20px; 
                                             direction:rtl; text-align:right; 
-                                            font-family: "B Homa", Tahoma, Arial, sans-serif;
-                                            box-shadow: 0 6px 20px rgba(162, 155, 254, 0.4);' >
-                                    <b style="font-size:22px; color: #6c5ce7;">🔎 پیشنهادات جستجو در گوگل:</b><br>
-                                    <span style="font-size:19px; line-height: 2;">{chips_html}</span>
+                                            font-family: "B Homa", Tahoma, Arial, sans-serif;'>
+                                    <b style="font-size:20px;">🔎 پیشنهادات جستجو در گوگل:</b><br>
+                                    <span style="font-size:18px; line-height: 2;">{chips_html}</span>
                                 </div>
                                 """,
                                 unsafe_allow_html=True
@@ -670,12 +677,10 @@ if st.session_state.results:
             st.markdown(
                 f"""
                 <div style='direction:rtl; text-align:right; 
-                            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-                            color:#c0392b; border:3px solid #e74c3c; 
-                            padding:18px; border-radius:15px; margin-top:15px;
+                            background: #e74c3c; color: white;
+                            padding:15px; border-radius:12px; margin-top:15px;
                             font-family: "B Homa", Tahoma, Arial, sans-serif;
-                            font-size: 19px; font-weight: 700;
-                            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);'>
+                            font-size: 18px; font-weight: 700;'>
                     ❌ پاسخ سرویس دهنده ساختار مورد انتظار را ندارد: {e}
                 </div>
                 """,
@@ -685,12 +690,10 @@ if st.session_state.results:
         st.markdown(
             """
             <div style='direction:rtl; text-align:right; 
-                        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-                        color:#c0392b; border:3px solid #e74c3c; 
-                        padding:18px; border-radius:15px; margin-top:15px;
+                        background: #e74c3c; color: white;
+                        padding:15px; border-radius:12px; margin-top:15px;
                         font-family: "B Homa", Tahoma, Arial, sans-serif;
-                        font-size: 19px; font-weight: 700;
-                        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);'>
+                        font-size: 18px; font-weight: 700;'>
                 ❌ پاسخ سرویس دهنده بدون ساختار میباشد.
             </div>
             """,
