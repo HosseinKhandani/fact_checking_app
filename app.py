@@ -486,10 +486,16 @@ with st.container():
                     background: #f8f9fa; border-right: 4px solid #667eea;
                     padding: 18px; border-radius: 8px; margin-bottom: 20px;
                     font-family: "B Homa", Tahoma, Arial, sans-serif;'>
-            <p style='margin: 0; font-size: 18px; line-height: 1.8; color: #2c3e50;'>
+            <p style='margin: 0 0 12px 0; font-size: 18px; line-height: 1.8; color: #2c3e50;'>
                 <span style='font-size: 28px; margin-left: 10px;'>ℹ️</span>
                 <strong>راهنما:</strong> این اپلیکیشن در حال حاضر تنها صحت‌سنجی یک <strong>"ادعا"</strong> را انجام می‌دهد و برای شروع فرایند تحلیل، عنوان و خلاصه متن خود را وارد نمایید. لازم به ذکر است که اپلیکیشن حاضر نسخه صفر است و متدولوژی و ابعاد صحت‌سنجی آن در حال تکمیل و توسعه است.
             </p>
+            <ul style='margin: 10px 0 0 0; padding-right: 25px; font-size: 16px; line-height: 1.9; color: #34495e;'>
+                <li>تنها متن ادعا یا خلاصه آن کفایت دارد و از معرفی لینک خودداری شود</li>
+                <li>تنها ادعاهای رسانه‌ای اقتصادی پشتیبانی می‌شود</li>
+                <li>صحت‌سنجی براساس منابع و تحلیل سایت‌های داخلی و خارجی بررسی می‌شود</li>
+                <li>مدل ممکن است دچار خطا و توهم شود؛ به همین منظور نتایج قبل از اقدام خاص بررسی شود</li>
+            </ul>
         </div>
         """,
         unsafe_allow_html=True
