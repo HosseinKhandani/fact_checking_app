@@ -399,6 +399,29 @@ st.markdown(
         margin: 0 !important;
         transform: scale(1.2);
     }
+    div.stExpander {
+        direction: rtl;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        margin-bottom: 15px;
+    }
+    div.stExpander summary {
+        direction: rtl;
+        text-align: right;
+        font-family: 'B Homa', Tahoma, Arial, sans-serif !important;
+        font-size: 18px;
+        font-weight: 700;
+        color: #667eea;
+        padding: 12px;
+    }
+    div.stExpander summary:hover {
+        background: #f8f9fa;
+    }
+    div.stExpander div[data-testid="stExpanderDetails"] {
+        direction: rtl;
+        text-align: right;
+        padding: 10px;
+    }
     textarea {
         direction: rtl;
         text-align: right;
