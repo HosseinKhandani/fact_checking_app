@@ -480,6 +480,21 @@ st.markdown(
 )
 
 with st.container():
+    st.markdown(
+        """
+        <div style='direction:rtl; text-align:right; 
+                    background: #f8f9fa; border-right: 4px solid #667eea;
+                    padding: 18px; border-radius: 8px; margin-bottom: 20px;
+                    font-family: "B Homa", Tahoma, Arial, sans-serif;'>
+            <p style='margin: 0; font-size: 18px; line-height: 1.8; color: #2c3e50;'>
+                <span style='font-size: 28px; margin-left: 10px;'>ℹ️</span>
+                <strong>راهنما:</strong> این اپلیکیشن در حال حاضر تنها صحت‌سنجی یک <strong>"ادعا"</strong> را انجام می‌دهد و برای شروع فرایند تحلیل، عنوان و خلاصه متن خود را وارد نمایید. لازم به ذکر است که اپلیکیشن حاضر نسخه صفر است و متدولوژی و ابعاد صحت‌سنجی آن در حال تکمیل و توسعه است.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
     prompt = st.text_area(
         "📝 متن خبر یا اظهار برای راستی‌آزمایی را وارد کنید:",
         height=200,
