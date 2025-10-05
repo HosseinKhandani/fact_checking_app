@@ -465,13 +465,15 @@ with st.container():
         value=st.session_state.input_text
     )
     
-    model_choice = st.radio(
-        "💡 مدل را انتخاب کنید:",
-        options=["Gemini-2.5pro", "Gemini-2.5flash"],
-        index=0 if st.session_state.model_choice == "Gemini-2.5pro" else 1,
-        horizontal=True,
-        key="model_choice"
-    )
+    with st.expander("💡 مدل را انتخاب کنید", expanded=False):
+        model_choice = st.radio(
+            "انتخاب مدل:",
+            options=["Gemini-2.5pro", "Gemini-2.5flash"],
+            index=0 if st.session_state.model_choice == "Gemini-2.5pro" else 1,
+            horizontal=True,
+            key="model_choice",
+            label_visibility="collapsed"
+        )
     
     col1, col2, col3 = st.columns([6, 1, 1])
     with col3:
