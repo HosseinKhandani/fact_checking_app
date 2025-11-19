@@ -180,7 +180,7 @@ ________________________________________
     }
             
 """
-apikey = "AIzaSyA0rz6G2sO3aqTiRpxt0VBcj5q6RHg3J3s"
+apikey = "AIzaSyAJ55DI95avGjDAu5ETS-Lo2Ut4I8gN-mg"
 client = genai.Client(api_key=apikey)
 
 def callgemini(prompt):
@@ -745,3 +745,4 @@ if st.session_state.results:
             """,
             unsafe_allow_html=True
         )
+
